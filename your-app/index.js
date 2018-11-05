@@ -2,7 +2,7 @@ if (typeof window.web3 !== 'undefined') {
   window.web3 = new Web3(window.web3.currentProvider);
 } else {
   // Other provider
-  window.web3 = new Web3(new Web3.providers.HttpProvider('yourOtherProvider'));
+  window.web3 = new Web3(new Web3.providers.HttpProvider('https://rinkeby.infura.io/orDImgKRzwNrVCDrAk5Q'));
 }
 
 function isElectron() {
@@ -32,7 +32,8 @@ function closeMetamaskNotification() {
 
 function sendEther(contractFunction) {
   web3.eth.sendTransaction({
-    to: '0x8f6c0c887F7CAF7D512C964eA2a3e668D94C5304',
+    to: '0x21A8a61dB05d77f2F38AD3684DEC8EEEF0BAA22e',
+    from: web3.eth.accounts[0],
     value: '1000000000000'
   }, (err, res) => {
     if (err) closeMetamaskNotification();

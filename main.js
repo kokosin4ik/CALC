@@ -17,19 +17,23 @@ if(isDev) {
 }
 
 let win;
-
+console.log('START');
 function createWindow() {
   win = new BrowserWindow({
     width: 1920,
     height: 1080
   });
-
+  
+  
+  
+  
   extensions.loadMetamask(session, win, isDev);
 
   let indexPath;
   isDev ? indexPath = path.join(`brave/${__dirname}`, 'your-app/index.html') : indexPath = path.join(`brave/${__dirname}`, 'index.html');
 
   setTimeout(() => {
+    // win.loadURL('http://localhost:3000');
     win.loadURL(url.format({
       pathname: indexPath,
       protocol: 'chrome',
