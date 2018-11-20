@@ -50,7 +50,5 @@ int main(int argc, char *argv[])
     CryptoPP::CFB_Mode<CryptoPP::AES>::Decryption cfbDecryption(key, key.size(), iv);
     cfbDecryption.ProcessData(plainText, plainText, messageLen);
     std::cout<<plainText<<std::endl;
-
-    
     return 0;
 }
