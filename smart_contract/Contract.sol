@@ -16,14 +16,22 @@ contract TaskCreator{
 
 contract Task{
     address public owner;
-    string[] public ipfsEncryptHashes;
-    string[] public ipfsDecryptHashes;
+    
     string description;
     uint balance;
     uint money_per_task;
     
+    
+    struct Tasks{
+        string[] ipfsEncryptHashes;
+        string[] ipfsDecryptHashes;
+        uint cur_pos;
+    }
+    Tasks public tasks;
+    mapping(address => Tasks) calculations;
+    
     Cryptos currency;
-    enum State{Creating, Running, Ended, Canceled}
+    enum State{Creating, Running, AllDone, Checking, Ended}
     State public TaskState;
     
     
@@ -37,13 +45,14 @@ contract Task{
        description = _description;
        TaskState = State.Creating;
        currency = _currency;
+       tasks.cur_pos = 0;
     }
     
 
     function putTask(string encryptHash, string decryptHash) public onlyOwner returns(bool){
         require(TaskState == State.Creating);
-        ipfsEncryptHashes.push(encryptHash);
-        ipfsDecryptHashes.push(decryptHash);
+        tasks.ipfsEncryptHashes.push(encryptHash);
+        tasks.ipfsDecryptHashes.push(decryptHash);
         return true;
     }
     
@@ -52,7 +61,7 @@ contract Task{
         require(TaskState == State.Creating);
         require(currency.allowance(msg.sender, address(this)) >= money);
         balance = money;
-        money_per_task = balance / ipfsDecryptHashes.length;
+        money_per_task = balance / tasks.ipfsDecryptHashes.length;
         currency.transferFrom(msg.sender, address(this), money);
         TaskState = State.Running;
         return true;
@@ -61,9 +70,15 @@ contract Task{
     function updMoney(uint money)public onlyOwner returns(bool){
         require(currency.allowance(msg.sender, address(this)) >= money);
         balance += money;
-        money_per_task = balance / ipfsDecryptHashes.length;
+        money_per_task = balance / tasks.ipfsDecryptHashes.length;
         return true;
     }
+    
+    // function getTask() public returns(string , string){
+    //     // require(calculations[msg.sender].isValue);
+        
+    //     return ("a" , "b");
+    // }
     
 }
 
