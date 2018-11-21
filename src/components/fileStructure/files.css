@@ -1,0 +1,12 @@
+.files {
+    padding: 36px 0 0 16px;
+    border-right: 1px solid #041627;
+    height: 100%;
+    background: #fbfbfb26;
+    /*height: 100%;*/
+}
+
+.ant-tree {
+    height: 100%;
+    overflow: auto;
+}

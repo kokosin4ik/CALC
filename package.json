@@ -1,91 +1,66 @@
 {
-  "name": "electron-metamask-boilerplate",
-  "productName": "Electron Metamask Boilerplate",
-  "version": "0.0.1",
-  "description": "Easily create a desktop version of your dApp using Electron (Muon) + MetaMask.",
-  "main": "main.js",
-  "license": "Apache-2.0",
-  "author": {
-    "name": "Swapy Network",
-    "email": "contact@swapy.network"
+  "name": "comeon-ui",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "engines": {
+    "node": "8.11.3",
+    "npm": "5.6.0"
   },
-  "keywords": [
-    "muon",
-    "electron",
-    "metamask",
-    "dapp",
-    "ethereum",
-    "decentralized",
-    "desktop",
-    "app"
-  ],
-  "bugs": {
-    "url": "https://github.com/SwapyNetwork/electron-metamask-boilerplate/issues"
-  },
-  "homepage": "https://github.com/SwapyNetwork/electron-metamask-boilerplate#readme",
   "scripts": {
-    "start": "node setup.js",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder",
-    "copy.metamask.prod": "cp -R extensions your-app/dist && cp extensions.js your-app/dist && cp main.js your-app/dist",
-    "download.metamask.dev": "mkdir -p extensions && rm -rf extensions/* && cd extensions && ced nkbihfbeogaeaoehlefnkodbefgpgknn && mv nkbihfbeogaeaoehlefnkodbefgpgknn metamask",
-    "download.metamask.prod": "mkdir -p your-app/dist/extensions && rm -rf your-app/dist/extensions/* && cd your-app/dist/extensions && ced nkbihfbeogaeaoehlefnkodbefgpgknn && mv nkbihfbeogaeaoehlefnkodbefgpgknn metamask",
-    "build": "npm run download.metamask.prod && npm run copy.metamask.prod && yarn dist",
-    "build.linux": "npm run download.metamask.prod && npm run copy.metamask.prod && yarn dist -l",
-    "build.win": "npm run download.metamask.prod && npm run copy.metamask.prod && yarn dist -w",
-    "build.mac": "npm run download.metamask.prod && npm run copy.metamask.prod && yarn dist -m",
-    "build.all": "npm run download.metamask.prod && npm run copy.metamask.prod && yarn dist -wlm",
-    "postinstall": "npm i --save-dev brave/electron-prebuilt"
+    "start": "node server.js",
+    "heroku-postbuild": "webpack -p --config=config/webpack.dev.js",
+    "serve": "webpack-dev-server --config=config/webpack.dev.js",
+    "build": "webpack --mode=production --config=config/webpack.dev.js",
+    "dev": "nodemon --inspect --watch config --watch src/server src/server/main.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/SwapyNetwork/electron-metamask-boilerplate.git"
-  },
-  "build": {
-    "appId": "electron-metamask-boilerplate",
-    "productName": "Electron Metamask Boilerplate",
-    "muonVersion": "4.7.1",
-    "files": [
-      "dist/**/*",
-      "node_modules/**/*"
-    ],
-    "asar": true,
-    "asarUnpack": [
-      "dist/extensions/"
-    ],
-    "directories": {
-      "buildResources": "app/dist/assets/icons",
-      "output": "dist",
-      "app": "your-app"
-    },
-    "nodeGypRebuild": false,
-    "linux": {
-      "target": [
-        "deb",
-        "AppImage"
-      ],
-      "icon": "your-app/dist/assets/icons",
-      "category": "Office"
-    },
-    "mac": {
-      "category": "public.app-category.finance",
-      "target": "tar.gz",
-      "icon": "your-app/dist/assets/icons/swapy-exchange"
-    },
-    "win": {
-      "target": "nsis",
-      "icon": "your-app/dist/assets/icons/swapy-exchange.ico"
-    }
-  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "devDependencies": {
-    "chrome-ext-downloader": "^1.0.3",
-    "electron-builder": "^19.52.1",
-    "electron-is-dev": "^0.3.0",
-    "electron-prebuilt": "github:brave/electron-prebuilt",
-    "electron-reload": "^1.2.2",
-    "yarn": "^1.3.2"
+    "@babel/core": "^7.0.0",
+    "@babel/plugin-transform-runtime": "^7.0.0",
+    "@babel/preset-env": "^7.0.0",
+    "@babel/preset-react": "^7.0.0",
+    "@babel/register": "^7.0.0",
+    "@babel/runtime": "^7.0.0",
+    "babel-loader": "^8.0.0",
+    "babel-plugin-import": "^1.8.0",
+    "css": "^2.2.3",
+    "css-loader": "^1.0.0",
+    "extract-loader": "^2.0.1",
+    "file-loader": "^2.0.0",
+    "gulp-babel": "^8.0.0",
+    "html-loader": "^0.5.5",
+    "html-webpack-plugin": "^3.2.0",
+    "loader": "^2.1.1",
+    "nodemon": "^1.18.4",
+    "npm": "^6.4.1",
+    "prettier": "^1.14.2",
+    "style-loader": "^0.23.0",
+    "webpack": "^4.17.1",
+    "webpack-cli": "^3.1.0",
+    "webpack-dev-middleware": "^3.2.0",
+    "webpack-dev-server": "^3.1.7",
+    "webpack-hot-middleware": "^2.22.3"
   },
   "dependencies": {
-    "qs": "^6.5.1"
+    "antd": "^3.8.4",
+    "axios": "^0.18.0",
+    "emotion": "^9.2.12",
+    "express": "^4.16.3",
+    "fs-extra": "^7.0.1",
+    "http": "0.0.0",
+    "leaflet": "^1.3.4",
+    "react": "^16.4.2",
+    "react-dom": "^16.4.2",
+    "react-leaflet": "^2.0.1",
+    "react-router-dom": "^4.3.1",
+    "react-spinners": "^0.4.7",
+    "socket.io": "^2.1.1",
+    "socket.io-client": "^2.1.1",
+    "solc": "^0.4.25",
+    "truffle-hdwallet-provider": "0.0.3",
+    "web3": "^1.0.0-beta.35"
   }
 }
