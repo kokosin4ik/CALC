@@ -26,6 +26,14 @@ contract Task{
     uint balance;
     uint money_per_task;
 
+
+    struct Results{
+        string[] succesHashes;
+        string[] values;
+        uint totalSuccess;
+    }
+   
+    
     struct Tasks{
         string[] ipfsEncryptHashes;
         string[] ipfsDecryptHashes;
@@ -33,11 +41,13 @@ contract Task{
         uint totalTasks;
         uint doneTasks;
         address[] executors;
-        uint[] verifyed;
+        uint verifyers;
     }
     Tasks public tasks;
+    Results public resultToSend;
     
-    event AllDonevent(address);
+    event AllDoneEvent(address);
+    event FinishVerifaction(address);
     //Mapings where  calculations calculators and reults are put
     mapping(address => string) calculations;
     mapping(address => uint) calculators_position;
@@ -50,13 +60,17 @@ contract Task{
     enum State{Creating, Running, AllDone, Checking, Ended}
     State public TaskState;
     
-    
     modifier onlyOwner(){
         require(msg.sender == owner);
         _;
     }
 
 
+    function getLAstResult()public view  onlyOwner returns(Results) {
+        require(TaskState == State.Ended);
+        return resultToSend;
+        
+    }
     function getTaskBalance() public view returns(uint){
         return money_per_task;
     }
@@ -87,7 +101,7 @@ contract Task{
         bytes memory validString = bytes(calculations[msg.sender]);
         require(validString.length != 0);
         bytes memory valid = bytes(results[msg.sender]);
-        require(valid.length != 0);
+        require(valid.length == 0);
         _;
     }
     
@@ -133,6 +147,7 @@ contract Task{
             tasks.executors.push(msg.sender);
             tasks.curPos += 1;
             isChecker[msg.sender] = true;
+            tasks.verifyers += 1;
             return hash;
         }else{
             return "";
@@ -144,9 +159,38 @@ contract Task{
         tasks.doneTasks += 1;
         if (tasks.doneTasks == tasks.totalTasks){
             TaskState = State.Checking;
-            
+            emit AllDoneEvent(address(this));
         }
         return true;
+    }
+    
+
+    
+    function finishTasks() private{
+        require(TaskState == State.Checking);
+        uint min_correct_checks = (tasks.totalTasks - 1) / 2;
+        uint sucess_tasks = tasks.totalTasks;
+        uint i = 0;
+        for(i = 0; i < tasks.totalTasks; i++){
+            if(countSuccess[tasks.ipfsEncryptHashes[i]]<= min_correct_checks){
+                currency.transferFrom(tasks.executors[i], address(this), money_per_task);
+                currency.transfer(owner, money_per_task);
+                sucess_tasks -= 1;
+            }
+        }
+        
+        money_per_task = balance / sucess_tasks;
+        for(i = 0; i < tasks.totalTasks; i++){
+            if(countSuccess[tasks.ipfsEncryptHashes[i]] >  min_correct_checks){
+                currency.transfer(tasks.executors[i], money_per_task);
+                resultToSend.succesHashes.push(tasks.ipfsEncryptHashes[i]);
+                resultToSend.values.push(results[tasks.executors[i]]);
+                resultToSend.totalSuccess += 1;
+                
+            }
+        }
+        emit FinishVerifaction(owner);
+        TaskState = State.Ended;
     }
     
     function tellVerification(string[] hashes ,uint[] result) public returns(bool){
@@ -154,8 +198,11 @@ contract Task{
         for(uint i = 0; i < hashes.length; i++){
             countSuccess[hashes[i]] += result[i];
         }
+        isChecker[msg.sender] = false;
+        tasks.verifyers -= 1;
+        if(tasks.verifyers == 0)
+            finishTasks();
         return true;
-        
     }
 
     function getVerificationBin() public view returns(string[]){
