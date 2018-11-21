@@ -1,36 +1,52 @@
 pragma solidity ^0.4.25;
+pragma experimental ABIEncoderV2;
+
 contract TaskCreator{
     
     address[] public tasks;
     Cryptos currency;
     
+    function getTasks()public view returns(address[]){
+        return tasks;
+    }
+    
     constructor (address _currency_address) public{
         currency = Cryptos(_currency_address);
     }
     
-    function createTask(string description) public{
-        address newTask = new Task(msg.sender, description, currency);
+    function createTask(string description, string[] encryptHashes, string[] decryptHashes) public{
+        address newTask = new Task(msg.sender, description, currency, encryptHashes, decryptHashes);
         tasks.push(newTask);
     }
 }
 
 contract Task{
     address public owner;
-    
     string description;
     uint balance;
     uint money_per_task;
-    
-    
+
     struct Tasks{
         string[] ipfsEncryptHashes;
         string[] ipfsDecryptHashes;
-        uint cur_pos;
+        uint curPos;
+        uint totalTasks;
+        uint doneTasks;
+        address[] executors;
+        uint[] verifyed;
     }
     Tasks public tasks;
-    mapping(address => Tasks) calculations;
     
+    event AllDonevent(address);
+    //Mapings where  calculations calculators and reults are put
+    mapping(address => string) calculations;
+    mapping(address => uint) calculators_position;
+    mapping(address => string) results;
+    mapping(string => uint) countSuccess;
+    mapping(address => bool) isChecker;
+    //our coin for more flexiability
     Cryptos currency;
+    //statte of a cocontract
     enum State{Creating, Running, AllDone, Checking, Ended}
     State public TaskState;
     
@@ -40,20 +56,51 @@ contract Task{
         _;
     }
 
-    constructor(address _owner, string _description, Cryptos _currency) public{
-       owner = _owner;
-       description = _description;
-       TaskState = State.Creating;
-       currency = _currency;
-       tasks.cur_pos = 0;
+
+    function getTaskBalance() public view returns(uint){
+        return money_per_task;
     }
     
+    function getBalance() public view returns(uint){
+        return balance;
+    }
 
-    function putTask(string encryptHash, string decryptHash) public onlyOwner returns(bool){
-        require(TaskState == State.Creating);
-        tasks.ipfsEncryptHashes.push(encryptHash);
-        tasks.ipfsDecryptHashes.push(decryptHash);
-        return true;
+    function getDescription() public view returns(string){
+        return description;
+    }
+    
+    function getTasks() public view returns(Tasks){
+        return tasks;
+    }
+    
+    function getOwner() public view returns(address){
+        return owner;
+    }
+
+    modifier if_not_get_task(){
+        bytes memory validString = bytes(calculations[msg.sender]);
+        require(validString.length == 0);
+        _;
+    }
+    
+    modifier if_put_res(){
+        bytes memory validString = bytes(calculations[msg.sender]);
+        require(validString.length != 0);
+        bytes memory valid = bytes(results[msg.sender]);
+        require(valid.length != 0);
+        _;
+    }
+    
+    constructor(address _owner, string _description, Cryptos _currency, string[] _encryptHashes, string[] _decryptHashes) public{
+        owner = _owner;
+        description = _description;
+        TaskState = State.Creating;
+        currency = _currency;
+        tasks.ipfsEncryptHashes = _encryptHashes;
+        tasks.ipfsDecryptHashes = _decryptHashes;
+        tasks.totalTasks = _encryptHashes.length;
+        tasks.curPos = 0;
+        tasks.doneTasks = 0;
     }
     
     function putMoney(uint money) public onlyOwner returns(bool){
@@ -61,25 +108,69 @@ contract Task{
         require(TaskState == State.Creating);
         require(currency.allowance(msg.sender, address(this)) >= money);
         balance = money;
-        money_per_task = balance / tasks.ipfsDecryptHashes.length;
+        money_per_task = balance / tasks.totalTasks;
         currency.transferFrom(msg.sender, address(this), money);
         TaskState = State.Running;
         return true;
     }
     
     function updMoney(uint money)public onlyOwner returns(bool){
+        require(TaskState == State.Running);
         require(currency.allowance(msg.sender, address(this)) >= money);
         balance += money;
-        money_per_task = balance / tasks.ipfsDecryptHashes.length;
+        money_per_task = balance / tasks.totalTasks;
         return true;
     }
     
-    // function getTask() public returns(string , string){
-    //     // require(calculations[msg.sender].isValue);
-        
-    //     return ("a" , "b");
-    // }
+    function getTask() public if_not_get_task returns(string){
+        require(currency.allowance(msg.sender, address(this)) >= money_per_task);
+        require(tasks.curPos < tasks.totalTasks);
+        string memory hash;
+        if(tasks.curPos < tasks.totalTasks){
+            hash = tasks.ipfsEncryptHashes[tasks.curPos];
+            calculations[msg.sender] = hash;
+            calculators_position[msg.sender] = tasks.curPos;
+            tasks.executors.push(msg.sender);
+            tasks.curPos += 1;
+            isChecker[msg.sender] = true;
+            return hash;
+        }else{
+            return "";
+        }
+    }
     
+    function putCalc(string res) public if_put_res returns(bool){
+        results[msg.sender] = res;
+        tasks.doneTasks += 1;
+        if (tasks.doneTasks == tasks.totalTasks){
+            TaskState = State.Checking;
+            
+        }
+        return true;
+    }
+    
+    function tellVerification(string[] hashes ,uint[] result) public returns(bool){
+        require(isChecker[msg.sender] == true);
+        for(uint i = 0; i < hashes.length; i++){
+            countSuccess[hashes[i]] += result[i];
+        }
+        return true;
+        
+    }
+
+    function getVerificationBin() public view returns(string[]){
+        uint i = 0;
+        uint j = 0;
+        string[] memory hashes_to_verify = new string[](2*(tasks.totalTasks - 1));
+        for(i = 0; i < tasks.totalTasks; i++){
+            if(i != calculators_position[msg.sender]){
+                hashes_to_verify[j] = tasks.ipfsDecryptHashes[i];
+                hashes_to_verify[j + 1] = results[tasks.executors[i]];
+                j += 2;
+            }
+        }
+        return hashes_to_verify;
+    }
 }
 
 
