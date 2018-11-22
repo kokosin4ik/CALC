@@ -90,6 +90,10 @@ contract Task{
     function getOwner() public view returns(address){
         return owner;
     }
+    
+    function IsChecker()public view returns(bool){
+        return isChecker[msg.sender];
+    }
 
     modifier if_not_get_task(){
         bytes memory validString = bytes(calculations[msg.sender]);
@@ -135,7 +139,12 @@ contract Task{
         return true;
     }
     
-    function getTask() public if_not_get_task returns(string){
+    
+    function getUserTask() public view returns(string){
+        return calculations[msg.sender];
+    }
+    
+    function register() public if_not_get_task returns(bool){
         require(TaskState == State.Running);
         require(currency.allowance(msg.sender, address(this)) >= money_per_task);
         require(tasks.curPos < tasks.totalTasks);
@@ -148,13 +157,13 @@ contract Task{
             tasks.curPos += 1;
             isChecker[msg.sender] = true;
             tasks.verifyers += 1;
-            return hash;
+            return true;
         }else{
-            return "";
+            return false;
         }
     }
     
-    function putCalc(string res) public if_put_res returns(bool){
+    function putRes(string res) public if_put_res returns(bool){
         results[msg.sender] = res;
         tasks.doneTasks += 1;
         if (tasks.doneTasks == tasks.totalTasks){
