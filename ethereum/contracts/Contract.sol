@@ -10,14 +10,22 @@ contract TaskCreator{
         return tasks;
     }
     
+    mapping(address => address) userTasks; 
+    
     constructor (address _currency_address) public{
         
         currency = Calc(_currency_address);
     }
     
-    function createTask(string description, string[] encryptHashes, string[] decryptHashes) public{
+    function lastCreatedTask() public view returns(address){
+        return userTasks[msg.sender];
+    }
+    
+    function createTask(string description, string[] encryptHashes, string[] decryptHashes) public returns(address){
         address newTask = new Task(msg.sender, description, currency, encryptHashes, decryptHashes);
         tasks.push(newTask);
+        userTasks[msg.sender] = newTask;
+        return newTask;
     }
 }
 
@@ -34,7 +42,6 @@ contract Task{
         uint totalSuccess;
     }
    
-    
     struct Tasks{
         string[] ipfsEncryptHashes;
         string[] ipfsDecryptHashes;
@@ -44,8 +51,8 @@ contract Task{
         address[] executors;
         uint verifyers;
     }
-    Tasks public tasks;
-    Results public resultToSend;
+    Tasks tasks;
+    Results resultToSend;
     
     event AllDoneEvent(address);
     event FinishVerifaction(address);
@@ -78,13 +85,17 @@ contract Task{
     function getBalance() public view returns(uint){
         return balance;
     }
+    
+    function getAvailableTasks() public view returns(uint){
+        return tasks.totalTasks - tasks.curPos;
+    }
+    
+    function getTotalTasks()public view returns(uint){
+        return tasks.totalTasks;
+    }
 
     function getDescription() public view returns(string){
         return description;
-    }
-    
-    function getTasks() public view returns(Tasks){
-        return tasks;
     }
     
     function getOwner() public view returns(address){
@@ -173,6 +184,20 @@ contract Task{
         return true;
     }
     
+    function returnMoney()onlyOwner public returns(bool){
+        if (balance > 0){
+            currency.transfer(owner, balance);
+        }
+        uint i = 0;
+        uint transfer = 0;
+        for(i = 0; i < tasks.totalTasks; i++){
+            transfer = currency.allowance(tasks.executors[i],address(this));
+            if(transfer > 0){
+                currency.resetApprove(tasks.executors[i], transfer);
+            }
+        }
+        return true;
+    }
 
     
     function finishTasks() private{
@@ -199,6 +224,7 @@ contract Task{
                 resultToSend.succesHashes.push(tasks.ipfsEncryptHashes[i]);
                 resultToSend.values.push(results[tasks.executors[i]]);
                 resultToSend.totalSuccess += 1;
+                balance -= money_per_task;
                 
             }
         }
@@ -316,8 +342,6 @@ contract Calc is ERC20Interface{
         allowed[from][to] -= tokens;
         return true; 
     }
-
-
 }
 
 contract ICO is Calc{
