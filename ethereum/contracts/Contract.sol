@@ -4,14 +4,15 @@ pragma experimental ABIEncoderV2;
 contract TaskCreator{
     
     address[] public tasks;
-    Cryptos currency;
+    Calc currency;
     
     function getTasks()public view returns(address[]){
         return tasks;
     }
     
     constructor (address _currency_address) public{
-        currency = Cryptos(_currency_address);
+        
+        currency = Calc(_currency_address);
     }
     
     function createTask(string description, string[] encryptHashes, string[] decryptHashes) public{
@@ -55,7 +56,7 @@ contract Task{
     mapping(string => uint) countSuccess;
     mapping(address => bool) isChecker;
     //our coin for more flexiability
-    Cryptos currency;
+    Calc currency;
     //statte of a cocontract
     enum State{Creating, Running, AllDone, Checking, Ended}
     State public TaskState;
@@ -64,7 +65,6 @@ contract Task{
         require(msg.sender == owner);
         _;
     }
-
 
     function getLAstResult()public view  onlyOwner returns(Results) {
         require(TaskState == State.Ended);
@@ -105,7 +105,7 @@ contract Task{
         _;
     }
     
-    constructor(address _owner, string _description, Cryptos _currency, string[] _encryptHashes, string[] _decryptHashes) public{
+    constructor(address _owner, string _description, Calc _currency, string[] _encryptHashes, string[] _decryptHashes) public{
         owner = _owner;
         description = _description;
         TaskState = State.Creating;
@@ -118,7 +118,6 @@ contract Task{
     }
     
     function putMoney(uint money) public onlyOwner returns(bool){
-        require(msg.sender == owner);
         require(TaskState == State.Creating);
         require(currency.allowance(msg.sender, address(this)) >= money);
         balance = money;
@@ -137,6 +136,7 @@ contract Task{
     }
     
     function getTask() public if_not_get_task returns(string){
+        require(TaskState == State.Running);
         require(currency.allowance(msg.sender, address(this)) >= money_per_task);
         require(tasks.curPos < tasks.totalTasks);
         string memory hash;
@@ -176,10 +176,14 @@ contract Task{
                 currency.transferFrom(tasks.executors[i], address(this), money_per_task);
                 currency.transfer(owner, money_per_task);
                 sucess_tasks -= 1;
+            }else{
+                currency.resetApprove(tasks.executors[i], money_per_task);
             }
-        }
+        } 
         
+     
         money_per_task = balance / sucess_tasks;
+       
         for(i = 0; i < tasks.totalTasks; i++){
             if(countSuccess[tasks.ipfsEncryptHashes[i]] >  min_correct_checks){
                 currency.transfer(tasks.executors[i], money_per_task);
@@ -238,9 +242,9 @@ contract ERC20Interface {
     event Approval(address indexed tokenOwner, address indexed spender, uint tokens);
 }
 
-contract Cryptos is ERC20Interface{
-    string public name = "Cryptos";
-    string public symbol = "CRPT";
+contract Calc is ERC20Interface{
+    string public name = "Calc";
+    string public symbol = "CALC";
     uint public decimals = 0;
     
     uint public supply;
@@ -278,6 +282,12 @@ contract Cryptos is ERC20Interface{
         return allowed[tokenOwner][spender];
     }
     
+    function resetApprove(address spender, uint tokens)public returns(bool){
+        require(allowed[spender][msg.sender] >= tokens);
+        allowed[spender][msg.sender] -= tokens;
+        return true;
+    }
+    
     function approve(address spender, uint tokens) public returns(bool){
         require(balances[msg.sender] >= tokens);
         require(tokens > 0);
@@ -301,7 +311,7 @@ contract Cryptos is ERC20Interface{
 
 }
 
-contract ICO is Cryptos{
+contract ICO is Calc{
     address public admin;
     address public deposit;
     
