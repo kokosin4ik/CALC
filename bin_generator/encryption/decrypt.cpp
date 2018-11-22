@@ -32,8 +32,8 @@ int main(int argc, char *argv[])
 {
     std::string str = KEY;
     std::string iv_str = SECBLOCK;
-    std::cout<<str<<std::endl;
-    std::cout<<SECBLOCK<<std::endl;
+    // std::cout<<str<<std::endl;
+    // std::cout<<SECBLOCK<<std::endl;
     CryptoPP::AutoSeededRandomPool rnd;
 
     std::vector<CryptoPP::byte> byte_vec = HexToBytes(str);
@@ -45,10 +45,11 @@ int main(int argc, char *argv[])
     size_t messageLen = std::strlen((char*)plainText);
     // plainText[messageLen] = '\0';
     // Decrypt
-    std::cout<<messageLen<<std::endl;
-
     CryptoPP::CFB_Mode<CryptoPP::AES>::Decryption cfbDecryption(key, key.size(), iv);
     cfbDecryption.ProcessData(plainText, plainText, messageLen);
-    std::cout<<plainText<<std::endl;
+    std::string result(reinterpret_cast< char const* >(plainText));
+    if(result.find(iv_str) != std::string::npos)
+        std::cout<<1<<std::endl;
+    else std::cout<<0<<std::endl;
     return 0;
 }
