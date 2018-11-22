@@ -5,6 +5,7 @@ import "./app.css";
 import { Switch, Route } from 'react-router-dom';
 import HeaderMenu from './HeaderMenu';
 import MainView from './MainView';
+import TasksView from './TasksView';
 import MapView from './MapView';
 
 
@@ -22,6 +23,7 @@ export default class App extends React.Component {
           <Switch>
             <Route exact path='/' component={MainView}/>
             <Route path='/map' component={MapView}/>
+            {/*<Route path='/tasks' component={TasksView}>*/}
           </Switch>
         </Layout>
       </div>

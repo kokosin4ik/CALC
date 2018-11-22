@@ -20,6 +20,7 @@
 .actions {
     background: white;
     height: 100%;
+    overflow: auto;
 
 }
 

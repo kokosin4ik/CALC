@@ -75,10 +75,7 @@ router.get("/script", function(req, res) {
       cwd: "./bin_generator"
     },
     (err, stdout) => {
-      let hashes = stdout
-        .split("USEFULL")[1]
-        .split("\n")
-        .filter(str => str.length !== 0);
+      let hashes = stdout.split('\n').filter(str => str.length > 0).map(str => str.split('\t'));
 
       var dirTree = "./bin_generator/out";
 

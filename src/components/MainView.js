@@ -9,21 +9,49 @@ import { Divider } from "antd";
 import openSocket from "socket.io-client";
 import ActionWindow from "./actionWindow/actionWindow";
 import axios from "axios/index";
-import { message, Icon, Alert, Input } from 'antd';
+import { message, Icon, Alert, Input } from "antd";
 const { TextArea } = Input;
-import factory from '../../ethereum/factory';
-import web3 from '../../ethereum/web3';
+import taskCreator from "../../ethereum/taskCreator";
+import CALC from "../../ethereum/CALC"
+import getTask from "../../ethereum/Task"
+import web3 from "../../ethereum/web3";
 
-const success = () => {
-  message.success('Binaries was successfully generated and deployed in IPFS');
+import { Modal } from 'antd';
+
+const success = Modal.success;
+let ValueToDonate;
+
+function showConfirm(onOkFunc) {
+  success({
+    title: 'Smart contract was succesfully created',
+    content: <div>
+      Now you should donate to it.
+      <div style={{ marginTop: 16 }}>
+        <Input addonAfter={"CALC"} defaultValue="12" onChange={e => {
+          ValueToDonate = event.target.value;
+          console.log(ValueToDonate);
+        }}/>
+      </div>
+      
+    </div>,
+    onOk() {
+      return onOkFunc()
+    },
+    onCancel() {},
+  });
+}
+
+const successMSG = (msg) => {
+  message.success(msg);
 };
 
 const openNotification = () => {
   notification.open({
-    message: 'Notification Title',
-    placement: 'bottomRight',
-    description: 'This is the content of the notification. This is the content of the notification. This is the content of the notification.',
-    icon: <Icon type="smile" style={{ color: '#108ee9' }} />,
+    message: "Notification Title",
+    placement: "bottomRight",
+    description:
+      "This is the content of the notification. This is the content of the notification. This is the content of the notification.",
+    icon: <Icon type="success" style={{ color: "#108ee9" }} />
   });
 };
 
@@ -37,53 +65,77 @@ export default class MainView extends React.Component {
       runningScript: false,
       hashes: undefined,
       wasDeployed: false,
-      selectedRaws: undefined
+      selectedRaws: undefined,
+      selectedTasks: [],
+      selectedCheckers: []
     };
     this.runScript = this.runScript.bind(this);
     this.onDescriptionChange = this.onDescriptionChange.bind(this);
+    this.onDeploy = this.onDeploy.bind(this);
+  }
+
+  async onDeploy() {
+    
+    const accounts = await web3.eth.getAccounts();
+    await taskCreator.methods.createTask(
+        this.state.description,
+        this.state.selectedTasks,
+        this.state.selectedCheckers
+      ).send({
+      from: accounts[0]
+    });
+    successMSG("Smart contract was succesfully created. Please, donate some CALC to perform calculations.");
+    let taskAddress = await taskCreator.methods.lastCreatedTask().call({
+      from: accounts[0]
+    })
+    showConfirm(async () => {
+      await CALC.methods.approve(taskAddress, ValueToDonate).send({
+        from: accounts[0]
+      })
+      let taskContract = await getTask(taskAddress);
+      await taskContract.methods.putMoney(ValueToDonate).send({
+        from: accounts[0]
+      })
+    });
+    successMSG("You have successfully donated your CALC. Let's calculate it!")
   }
 
   runScript() {
-    console.log("RUNN");
     this.setState({
       runningScript: true
     });
     axios.get(`http://localhost:8080/api/script`).then(res => {
       // debugger
       const data = res.data;
-      success();
+      let tasksHashes = data.hashes.map(arr => arr[0]);
+      let checkersHashes = data.hashes.map(arr => arr[1]);
+      let encFilesName = data.files.map(folder => {
+        return folder.children.map(file => file.name);
+      })[1];
+      let decFilesName = data.files.map(folder => {
+        return folder.children.map(file => file.name);
+      })[0];
+      successMSG("Binaries was successfully generated and deployed in IPFS");
       this.setState({
         runningScript: false,
-        hashes: data.hashes,
-        files: data.files,
-        selectedHashes: [],
-        description: ''
+        hashes: tasksHashes,
+        checkersHashes: checkersHashes,
+        encFiles: encFilesName,
+        decFiles: decFilesName,
+        description: ""
       });
     });
   }
-  
+
   onDescriptionChange(event, a) {
     this.setState({
       description: event.target.value
-    })
+    });
   }
-
-  async componentDidMount() {
-    const accounts = await web3.eth.getAccounts();
-    debugger
-    let tasks = await factory.methods
-    .tasks(0)
-    .call();
-    debugger
-    
-    
-    // socket.on('timer', timestamp => console.log(timestamp));
-    // socket.emit('subscribeToTimer', 1000);
-  }
-
+  
   render() {
     let loading = this.state.runningScript;
-    let { hashes, files } = this.state;
+    let { hashes, checkersHashes, encFiles, decFiles } = this.state;
     let me = this;
     const columns = [
       {
@@ -93,42 +145,69 @@ export default class MainView extends React.Component {
       },
       {
         title: "Hash",
-        dataIndex: "hash",
+        dataIndex: "hash"
       }
     ];
-    const data = [];
+    const dataEnc = [];
+    const dataDec = [];
 
     if (hashes) {
       hashes.forEach((hash, i) => {
-        data.push({
+        dataEnc.push({
           key: i,
           hash,
-          fileName: files[i].name
-        })
-      })
-      // debugger
+          fileName: encFiles[i]
+        });
+      });
+    }
+    if (checkersHashes) {
+      checkersHashes.forEach((hash, i) => {
+        dataDec.push({
+          key: i,
+          hash,
+          fileName: decFiles[i]
+        });
+      });
     }
     // rowSelection object indicates the need for row selection
-    const rowSelection = {
+    const rowSelection1 = {
       onChange: (selectedRowKeys, selectedRows) => {
         console.log(selectedRows);
         me.setState({
-          selectedHashes: selectedRows
-        })
+          selectedTasks: selectedRows.map(data => data.hash)
+        });
       },
       getCheckboxProps: record => ({
         disabled: record.name === "Disabled User", // Column configuration not to be checked
         name: record.name
       })
     };
-    
-    
+
+    const rowSelection2 = {
+      onChange: (selectedRowKeys, selectedRows) => {
+        console.log(selectedRows);
+        me.setState({
+          selectedCheckers: selectedRows.map(data => data.hash)
+        });
+      },
+      getCheckboxProps: record => ({
+        disabled: record.name === "Disabled User", // Column configuration not to be checked
+        name: record.name
+      })
+    };
 
     return (
       <div className="main-div">
         <Controll
           onRunScriptClick={this.runScript}
-          deployHashes={this.state.selectedHashes && this.state.selectedHashes.length > 0 && this.state.description.length > 0}
+          ariaVisible={this.state.selectedTasks.length > 0}
+          onDescriptionChange={this.onDescriptionChange}
+          deployHashes={
+            this.state.selectedTasks &&
+            this.state.selectedTasks.length > 0 &&
+            this.state.description.length > 0
+          }
+          onDeploy={this.onDeploy}
         />
         <Divider className="no-margin" />
         <Row className="window">
@@ -139,23 +218,43 @@ export default class MainView extends React.Component {
             {loading && <ActionWindow />}
             {hashes && (
               <div className="was-deployed">
-                <Table className='binaries'
-                  rowSelection={rowSelection}
+                <Table
+                  className="binaries"
+                  rowSelection={rowSelection1}
                   columns={columns}
-                  dataSource={data}
+                  dataSource={dataEnc}
                   pagination={false}
                   bordered
-                  title={() => 'Generated binaries and their hashes in IPFS'}
-                  footer={() => 'Select binaries and click Deploy button to push hashes in Ethereum smart-contract'}
+                  title={() =>
+                    "Generated tasks-binaries and their hashes in IPFS"
+                  }
                 />
-                {this.state.selectedHashes.length === 0 && <Alert message="Select binaries and click 'Create smart contract' button" type="info" showIcon />}
-                {this.state.selectedHashes.length > 0 &&
-                <TextArea
-                  placeholder="Add some description to your tasks"
-                  autosize={{ minRows: 2, maxRows: 6 }}
-                  onChange={this.onDescriptionChange}/>}
-                </div>
-              
+                <Table
+                  className="binaries"
+                  rowSelection={rowSelection2}
+                  columns={columns}
+                  dataSource={dataDec}
+                  pagination={false}
+                  bordered
+                  title={() =>
+                    "Generated checkers-binaries and their hashes in IPFS"
+                  }
+                />
+                {this.state.selectedTasks.length === 0 && (
+                  <Alert
+                    message="Select binaries and click 'Create smart contract' button"
+                    type="info"
+                    showIcon
+                  />
+                )}
+                {this.state.selectedTasks.length > 0 && (
+                  <TextArea
+                    placeholder="Add some description to your tasks"
+                    autosize={{ minRows: 2, maxRows: 6 }}
+                    onChange={this.onDescriptionChange}
+                  />
+                )}
+              </div>
             )}
           </Col>
         </Row>
