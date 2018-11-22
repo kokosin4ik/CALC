@@ -48,8 +48,12 @@ int main(int argc, char *argv[])
     CryptoPP::CFB_Mode<CryptoPP::AES>::Decryption cfbDecryption(key, key.size(), iv);
     cfbDecryption.ProcessData(plainText, plainText, messageLen);
     std::string result(reinterpret_cast< char const* >(plainText));
-    if(result.find(iv_str) != std::string::npos)
-        std::cout<<1<<std::endl;
+    auto position = result.find(iv_str);
+    if(position != std::string::npos){
+      result.erase(position, iv_str.length());
+      std::cout<<result<<std::endl;
+      std::cout<<1<<std::endl;
+    }
     else std::cout<<0<<std::endl;
     return 0;
 }
