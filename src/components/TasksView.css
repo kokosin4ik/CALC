@@ -1,0 +1,12 @@
+.ant-list-item {
+
+    padding: 20px 40px;
+}
+.loading-tasks {
+    height: 100%;
+    text-align: center;
+}
+
+.spinner {
+    margin-top: 100px;
+}

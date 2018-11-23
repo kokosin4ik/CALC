@@ -89,8 +89,6 @@ router.get("/script", function(req, res) {
       });
     }
   );
-  // console.log(testscript)
-  // res.json({ message : 'adsadad'})
 });
 
 // more routes for our API will happen here

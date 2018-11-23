@@ -17,13 +17,13 @@ const { Footer } = Layout;
 export default class App extends React.Component {
   render() {
     return (
-      <div style={{height: '100%'}}>
-        <Layout style={{height: '100%'}}>
+      <div style={{height: 'auto'}}>
+        <Layout style={{height: 'auto'}}>
           <HeaderMenu />
           <Switch>
             <Route exact path='/' component={MainView}/>
             <Route path='/map' component={MapView}/>
-            {/*<Route path='/tasks' component={TasksView}>*/}
+            <Route path='/tasks' component={TasksView}/>
           </Switch>
         </Layout>
       </div>

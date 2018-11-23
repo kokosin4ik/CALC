@@ -12,14 +12,14 @@ import axios from "axios/index";
 import { message, Icon, Alert, Input } from "antd";
 const { TextArea } = Input;
 import taskCreator from "../../ethereum/taskCreator";
-import CALC from "../../ethereum/CALC"
-import getTask from "../../ethereum/Task"
+import CALC from "../../ethereum/CALC";
+import getTask from "../../ethereum/Task";
 import web3 from "../../ethereum/web3";
 
 import { Modal } from 'antd';
 
 const success = Modal.success;
-let ValueToDonate;
+let ValueToDonate = 4;
 
 function showConfirm(onOkFunc) {
   success({
@@ -27,7 +27,7 @@ function showConfirm(onOkFunc) {
     content: <div>
       Now you should donate to it.
       <div style={{ marginTop: 16 }}>
-        <Input addonAfter={"CALC"} defaultValue="12" onChange={e => {
+        <Input addonAfter={"CALC"} defaultValue={ValueToDonate} onChange={e => {
           ValueToDonate = event.target.value;
           console.log(ValueToDonate);
         }}/>
@@ -91,7 +91,7 @@ export default class MainView extends React.Component {
     showConfirm(async () => {
       await CALC.methods.approve(taskAddress, ValueToDonate).send({
         from: accounts[0]
-      })
+      });
       let taskContract = await getTask(taskAddress);
       await taskContract.methods.putMoney(ValueToDonate).send({
         from: accounts[0]
@@ -106,9 +106,10 @@ export default class MainView extends React.Component {
     });
     axios.get(`http://localhost:8080/api/script`).then(res => {
       // debugger
-      const data = res.data;
+      let data = res.data;
       let tasksHashes = data.hashes.map(arr => arr[0]);
       let checkersHashes = data.hashes.map(arr => arr[1]);
+      data.files = data.files.filter(obj => obj.type !== "file");
       let encFilesName = data.files.map(folder => {
         return folder.children.map(file => file.name);
       })[1];

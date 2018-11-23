@@ -62,7 +62,7 @@ class Files extends React.Component {
     return (
       <div className='files'>
         <DirectoryTree
-    
+          className='tree'
           multiple
           defaultExpandAll
           onSelect={this.onSelect}

@@ -15,7 +15,7 @@ export default class HeaderMenu extends React.Component {
           style={{ lineHeight: "64px" }}
         >
           <Menu.Item key="1"><Link to='/'>Deploy in blockchain</Link></Menu.Item>
-          <Menu.Item key="2"><Link to='/map'>Available calculations</Link></Menu.Item>
+          <Menu.Item key="2"><Link to='/tasks'>Available tasks</Link></Menu.Item>
           <Menu.Item key="3"><Link to='/map'>Submit results</Link></Menu.Item>
           {/*<Menu.Item key="3">nav 3</Menu.Item>*/}
         </Menu>
