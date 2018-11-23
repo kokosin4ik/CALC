@@ -5,6 +5,7 @@ dist/
 package-lock.json
 .vscode/
 .idea
-keys/*
+bin_generator/encryption/keys/*
+bin_generator/result.txt
 dec/*
 enc/*
