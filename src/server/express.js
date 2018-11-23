@@ -1,18 +1,106 @@
 import express from "express";
 import { diretoryTreeToObj } from "./utils";
-
+const fs = require("fs");
 //================WS================
 
 const server = require("http").createServer();
 const io = require("socket.io")(server);
 let clients = [];
 
+io.on("end", function() {
+  io.disconnect(0);
+});
 io.on("connection", client => {
-  client.on("subscribeToTimer", interval => {
-    console.log("client is subscribing to timer with interval ", interval);
-    // setInterval(() => {
-    //   client.emit('timer', new Date());
-    // }, interval);
+  client.on("executeTask", async userTask => {
+    const exec = require("child_process").exec;
+    console.log(`curl http://127.0.0.1:8080/ipfs/${userTask} > taskbin`)
+    exec(
+      `curl http://127.0.0.1:8080/ipfs/${userTask} > taskbin`,
+      {
+        cwd: __dirname
+      },
+      (err, stdout) => {
+        console.log(err);
+        client.emit("execStatus", { status: "EXECUTE" });
+        exec(
+          `chmod +x taskbin`,
+          {
+            cwd: __dirname
+          },
+          (err, stdout) => {
+            exec(
+              `./taskbin`,
+              {
+                cwd: __dirname
+              },
+              (err, stdout) => {
+                exec(
+                  `cat result.txt`,
+                  {
+                    cwd: __dirname
+                  },
+                  (err, stdout) => {
+                    client.emit("execStatus", {
+                      status: "COMPLETE",
+                      result: stdout
+                    });
+                  }
+                );
+              }
+            );
+          }
+        );
+      }
+    );
+  });
+
+  client.on("checkTasks", async data => {
+    let hashes = data.map(item => item.hash);
+    let results = data.map(item => item.result);
+    console.log(results);
+    console.log(hashes);
+    const execSync = require("child_process").execSync;
+    var downloadPromises = [];
+    let i = 0;
+    console.log("START DOWNLOAD")
+    for (i = 0; i < hashes.length; i++) {
+      execSync(
+        `curl http://127.0.0.1:8080/ipfs/${hashes[i]} > check_${i}`,
+        {
+          cwd: __dirname
+        }
+      );
+      console.log(i)
+      execSync(
+        `chmod +x check_${i}`,
+        {
+          cwd: __dirname
+        }
+      );
+      fs.writeFileSync(`${__dirname}/res_${i}.txt`, results[i]);
+    }
+    console.log("START EXEC");
+    client.emit("checkStatus", { status: "EXECUTE" });
+    let resultOfCheck = [];
+    
+    const exec = require("child_process").exec;
+    const spawnSync = require("child_process").spawnSync;
+    // let promisesArr = [];
+    
+    for (i = 0; i < results.length; i++) {
+      console.log(i);
+      const j = i;
+      
+      let output = spawnSync(`./check_${j}`,[`"$(cat res_${j}.txt)"`], {
+        cwd: __dirname
+      });
+      
+      resultOfCheck.push({
+        hash: hashes[i],
+        result: 1
+      })
+    }
+    client.emit("checkStatus", { status: "COMPLETE", result: resultOfCheck });
   });
 });
 
@@ -75,7 +163,11 @@ router.get("/script", function(req, res) {
       cwd: "./bin_generator"
     },
     (err, stdout) => {
-      let hashes = stdout.split('\n').filter(str => str.length > 0).map(str => str.split('\t'));
+      let hashes = stdout
+        .slice(stdout.indexOf("%") + 1)
+        .split("\n")
+        .filter(str => str.length > 0)
+        .map(str => str.split("\t"));
 
       var dirTree = "./bin_generator/out";
 
@@ -100,6 +192,6 @@ serv.use("/api", router);
 // =============================================================================
 serv.get("/", (req, res) => {});
 
-serv.listen(8080, () => {
+serv.listen(8000, () => {
   console.log("Server is listening");
 });

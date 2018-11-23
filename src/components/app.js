@@ -1,12 +1,14 @@
 
 import React from "react";
-import { Layout, Menu, Breadcrumb, Icon } from "antd";
+import { Layout } from "antd";
 import "./app.css";
 import { Switch, Route } from 'react-router-dom';
 import HeaderMenu from './HeaderMenu';
 import MainView from './MainView';
 import TasksView from './TasksView';
 import MapView from './MapView';
+import TaskExecution from './TaskExecute'
+import CheckTask from "./CheckTask";
 
 
 
@@ -24,6 +26,8 @@ export default class App extends React.Component {
             <Route exact path='/' component={MainView}/>
             <Route path='/map' component={MapView}/>
             <Route path='/tasks' component={TasksView}/>
+            <Route path='/taskExecution/:id' component={TaskExecution}/>
+            <Route path='/checkTask' component={CheckTask}/>
           </Switch>
         </Layout>
       </div>

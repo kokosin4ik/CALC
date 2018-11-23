@@ -23,7 +23,7 @@ class Files extends React.Component {
   }
   
   componentDidMount() {
-    axios.get(`http://localhost:8080/api/files`)
+    axios.get(`http://localhost:8000/api/files`)
     .then(res => {
       const data = [{
         name: 'bin-generator',

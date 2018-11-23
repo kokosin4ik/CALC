@@ -1,11 +1,29 @@
 .logo {
     width: 120px;
     height: 31px;
-    background: rgba(255,255,255,.2);
+    background: rgb(4, 22, 39);
     margin: 16px 28px 16px 0;
     float: left;
+    text-align: center;
+    line-height: 32px;
+    color: white;
+    font-weight: 100;
+    font-family: monospace;
+    font-size: xx-large;
+    letter-spacing: 12px;
 }
 
 .ant-tree-icon__customize {
     padding-top: 4px;
+}
+
+.ant-steps-item-icon {
+    padding-top: 8px;
+}
+
+.ant-table-title {
+    background: #3296f7c4;
+    color: white;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
 }

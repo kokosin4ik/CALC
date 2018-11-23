@@ -1,12 +1,10 @@
 import React from "react";
-import { Layout, Breadcrumb } from "antd";
 import { Row, Col } from "antd";
 import Files from "./fileStructure/files";
 import Controll from "./controll/controll";
 import { Table } from "antd";
 import "./MainView.css";
 import { Divider } from "antd";
-import openSocket from "socket.io-client";
 import ActionWindow from "./actionWindow/actionWindow";
 import axios from "axios/index";
 import { message, Icon, Alert, Input } from "antd";
@@ -55,8 +53,7 @@ const openNotification = () => {
   });
 };
 
-const socket = openSocket("http://localhost:3000");
-const { Content } = Layout;
+
 
 export default class MainView extends React.Component {
   constructor(props) {
@@ -87,28 +84,32 @@ export default class MainView extends React.Component {
     successMSG("Smart contract was succesfully created. Please, donate some CALC to perform calculations.");
     let taskAddress = await taskCreator.methods.lastCreatedTask().call({
       from: accounts[0]
-    })
+    });
     showConfirm(async () => {
+      
       await CALC.methods.approve(taskAddress, ValueToDonate).send({
         from: accounts[0]
       });
+      
       let taskContract = await getTask(taskAddress);
+      // debugger
       await taskContract.methods.putMoney(ValueToDonate).send({
         from: accounts[0]
       })
+      successMSG("You have successfully donated your CALC. Let's calculate it!")
     });
-    successMSG("You have successfully donated your CALC. Let's calculate it!")
+    
   }
 
   runScript() {
     this.setState({
       runningScript: true
     });
-    axios.get(`http://localhost:8080/api/script`).then(res => {
+    axios.get(`http://localhost:8000/api/script`).then(res => {
       // debugger
       let data = res.data;
-      let tasksHashes = data.hashes.map(arr => arr[0]);
-      let checkersHashes = data.hashes.map(arr => arr[1]);
+      let checkersHashes = data.hashes.map(arr => arr[0]);
+      let tasksHashes = data.hashes.map(arr => arr[1]);
       data.files = data.files.filter(obj => obj.type !== "file");
       let encFilesName = data.files.map(folder => {
         return folder.children.map(file => file.name);
@@ -142,10 +143,10 @@ export default class MainView extends React.Component {
       {
         title: "Name",
         dataIndex: "fileName",
-        render: text => <a href="javascript:;">{text}</a>
+        render: (text, row) => <a href={`http://127.0.0.1:8080/ipfs/${row.hash}`}>{text}</a>
       },
       {
-        title: "Hash",
+        title: "IPFS Hash",
         dataIndex: "hash"
       }
     ];

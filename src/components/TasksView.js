@@ -30,7 +30,6 @@ function showConfirm(onOkFunc) {
   success({
     title: 'You must allow the contract to fine you. And then you can register for task.',
     content: <div>
-      Now you should donate to it.
       <div style={{ marginTop: 16 }}>
         <Input disabled={true} addonAfter={"CALC"} defaultValue={ValueToDonate}/>
       </div>
@@ -95,7 +94,7 @@ export default class TasksView extends React.Component {
     let taskContract = await getTask(taskAddress);
     ValueToDonate = task.moneyPerTask;
     showConfirm(async () => {
-      debugger
+      // debugger
       let a = ValueToDonate;
       await CALC.methods.approve(taskAddress, ValueToDonate).send({
         from: accounts[0]
@@ -104,7 +103,8 @@ export default class TasksView extends React.Component {
       await taskContract.methods.register().send({
         from: accounts[0]
       });
-      successMSG('You have been successfully registered for this task.')
+      // successMSG('You have been successfully registered for this task.');
+      this.props.history.push(`/taskExecution/${taskAddress}`);
     });
   }
 
