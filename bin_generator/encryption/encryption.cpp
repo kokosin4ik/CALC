@@ -46,13 +46,14 @@ int main(int argc, char const *argv[])
 
     Calculations* calc = getCalculator();
     // std::cout<<calc ->calculate()<<std::endl;
-    std::string msg = calc ->calculate() + iv_str;
+    std::string msg = (calc ->calculate() + iv_str);
     unsigned char* plainText = (unsigned char*)(msg.c_str());
-    size_t messageLen = std::strlen((char*)plainText) + 1;
+    size_t messageLen = msg.size()  + 1;
+    // std::cout<<messageLen<<std::endl;
     // Encrypt
     CryptoPP::CFB_Mode<CryptoPP::AES>::Encryption cfbEncryption(key, key.size(), iv);
     cfbEncryption.ProcessData(plainText, plainText, messageLen);
-
+    // std::cout<<messageLen<<std::endl;
     std::ofstream supliements("result.txt");
     if(supliements.is_open()){
         for(auto i =0; i < messageLen; i++){

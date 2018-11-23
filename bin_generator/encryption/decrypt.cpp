@@ -41,14 +41,19 @@ int main(int argc, char *argv[])
     
     byte_vec = HexToBytes(iv_str);
     CryptoPP::SecByteBlock iv(&byte_vec[0], byte_vec.size());
+    std::string res = argv[1];
+    size_t messageLen = res.size();
     unsigned char* plainText= (unsigned char*) argv[1];
-    size_t messageLen = std::strlen((char*)plainText);
-    // plainText[messageLen] = '\0';
-    // Decrypt
+    // std::cout<<argc<<std::endl;
+    // std::cout<<messageLen<<std::endl;
+    // // plainText[messageLen] = '\0';
+    // // Decrypt
     CryptoPP::CFB_Mode<CryptoPP::AES>::Decryption cfbDecryption(key, key.size(), iv);
     cfbDecryption.ProcessData(plainText, plainText, messageLen);
     std::string result(reinterpret_cast< char const* >(plainText));
     auto position = result.find(iv_str);
+    // std::cout<<result<<std::endl;
+    // std::cout<<plainText<<std::endl;
     if(position != std::string::npos){
       result.erase(position, iv_str.length());
       std::cout<<result<<std::endl;
