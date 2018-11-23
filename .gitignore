@@ -9,3 +9,4 @@ bin_generator/encryption/keys/*
 bin_generator/result.txt
 dec/*
 enc/*
+bin_generator/out/
