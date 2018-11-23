@@ -5,3 +5,6 @@ dist/
 package-lock.json
 .vscode/
 .idea
+keys/*
+dec/*
+enc/*
