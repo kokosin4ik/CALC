@@ -19,6 +19,7 @@ while read -r line; do
     make decrypt KEY="$A" SECBLOCK="$B" DENAME="$DENAME" > temp
     make clean_build > temp
 done < "$filename"
+rm temp
 ipfs add  out/dec/*  | awk '{print $2}' > encryption/keys/hashes_DENC 
 ipfs add  out/enc/*  | awk '{print $2}' > encryption/keys/hashes_ENC
 paste -d"\t" encryption/keys/hashes_DENC encryption/keys/hashes_ENC 
