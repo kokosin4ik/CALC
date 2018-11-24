@@ -50,9 +50,9 @@ contract Task{
         address[] executors;
         uint verifyers;
     }
-    Tasks tasks;
-    Results resultToSend;
-    
+    Tasks public tasks;
+    Results public resultToSend;
+
     event AllDoneEvent(address);
     event FinishVerifaction(address);
     //Mapings where  calculations calculators and reults are put
@@ -66,7 +66,7 @@ contract Task{
     //statte of a cocontract
     enum State{Creating, Running, AllDone, Checking, Ended}
     State public TaskState;
-    
+
     modifier onlyOwner(){
         require(msg.sender == owner);
         _;
@@ -75,20 +75,20 @@ contract Task{
     function getLAstResult()public view  onlyOwner returns(Results) {
         require(TaskState == State.Ended);
         return resultToSend;
-        
+
     }
     function getTaskBalance() public view returns(uint){
         return money_per_task;
     }
-    
+
     function getBalance() public view returns(uint){
         return balance;
     }
-    
+
     function getAvailableTasks() public view returns(uint){
         return tasks.totalTasks - tasks.curPos;
     }
-    
+
     function getTotalTasks()public view returns(uint){
         return tasks.totalTasks;
     }
@@ -96,11 +96,11 @@ contract Task{
     function getDescription() public view returns(string){
         return description;
     }
-    
+
     function getOwner() public view returns(address){
         return owner;
     }
-    
+
     function IsChecker()public view returns(bool){
         return isChecker[msg.sender];
     }
@@ -110,7 +110,7 @@ contract Task{
         require(validString.length == 0);
         _;
     }
-    
+
     modifier if_put_res(){
         bytes memory validString = bytes(calculations[msg.sender]);
         require(validString.length != 0);
@@ -118,7 +118,7 @@ contract Task{
         require(valid.length == 0);
         _;
     }
-    
+
     constructor(address _owner, string _description, Calc _currency, string[] _encryptHashes, string[] _decryptHashes) public{
         owner = _owner;
         description = _description;
@@ -130,7 +130,7 @@ contract Task{
         tasks.curPos = 0;
         tasks.doneTasks = 0;
     }
-    
+
     function putMoney(uint money) public onlyOwner returns(bool){
         require(TaskState == State.Creating);
         require(currency.allowance(msg.sender, address(this)) >= money);
@@ -140,7 +140,7 @@ contract Task{
         TaskState = State.Running;
         return true;
     }
-    
+
     function updMoney(uint money)public onlyOwner returns(bool){
         require(TaskState == State.Running);
         require(currency.allowance(msg.sender, address(this)) >= money);
@@ -148,12 +148,12 @@ contract Task{
         money_per_task = balance / tasks.totalTasks;
         return true;
     }
-    
-    
+
+
     function getUserTask() public view returns(string){
         return calculations[msg.sender];
     }
-    
+
     function register() public if_not_get_task returns(bool){
         require(TaskState == State.Running);
         require(currency.allowance(msg.sender, address(this)) >= money_per_task);
@@ -172,7 +172,7 @@ contract Task{
             return false;
         }
     }
-    
+
     function putRes(string res) public if_put_res returns(bool){
         results[msg.sender] = res;
         tasks.doneTasks += 1;
@@ -182,7 +182,7 @@ contract Task{
         }
         return true;
     }
-    
+
     function returnMoney()onlyOwner public returns(bool){
         if (balance > 0){
             currency.transfer(owner, balance);
@@ -198,7 +198,7 @@ contract Task{
         return true;
     }
 
-    
+
     function finishTasks() private{
         require(TaskState == State.Checking);
         uint min_correct_checks = (tasks.totalTasks - 1) / 2;
@@ -210,7 +210,7 @@ contract Task{
                 currency.transfer(owner, money_per_task);
                 sucess_tasks -= 1;
             }else{
-                currency.resetApprove(tasks.executors[i], money_per_task);
+                // currency.resetApprove(tasks.executors[i], money_per_task);
             }
         } 
         

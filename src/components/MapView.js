@@ -24,7 +24,6 @@ export default class MapView extends React.Component {
     
   }
   render() {
-    this.props.history.push('/taskExecution/0x9f77461B476332F02fb0Bdd5D87ee2BB96fa297c');
     return <div id="map"></div>
   }
 }

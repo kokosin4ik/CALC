@@ -3,7 +3,7 @@ import TaskFactory from './build/TaskCreator.json';
 
 const instance = new web3.eth.Contract(
   JSON.parse(TaskFactory.interface),
-  '0xcd776d4cd5c6e8d9c9dabffe6e45570b8b860d8d'
+  '0x7a3b405ff3b49f5e5c1aaab30a9801ea7486fd95'
 );
 
 export default instance;

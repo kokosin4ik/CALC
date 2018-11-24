@@ -7,39 +7,44 @@ import "./MainView.css";
 import { Divider } from "antd";
 import ActionWindow from "./actionWindow/actionWindow";
 import axios from "axios/index";
-import { message, Icon, Alert, Input } from "antd";
+import { message, Icon, Alert, Input, Button } from "antd";
 const { TextArea } = Input;
 import taskCreator from "../../ethereum/taskCreator";
 import CALC from "../../ethereum/CALC";
 import getTask from "../../ethereum/Task";
 import web3 from "../../ethereum/web3";
 
-import { Modal } from 'antd';
+import { Modal } from "antd";
 
 const success = Modal.success;
 let ValueToDonate = 4;
 
 function showConfirm(onOkFunc) {
   success({
-    title: 'Smart contract was succesfully created',
-    content: <div>
-      Now you should donate to it.
-      <div style={{ marginTop: 16 }}>
-        <Input addonAfter={"CALC"} defaultValue={ValueToDonate} onChange={e => {
-          ValueToDonate = event.target.value;
-          console.log(ValueToDonate);
-        }}/>
+    title: "Smart contract was succesfully created",
+    content: (
+      <div>
+        Now you should donate to it.
+        <div style={{ marginTop: 16 }}>
+          <Input
+            addonAfter={"CALC"}
+            defaultValue={ValueToDonate}
+            onChange={e => {
+              ValueToDonate = event.target.value;
+              console.log(ValueToDonate);
+            }}
+          />
+        </div>
       </div>
-      
-    </div>,
+    ),
     onOk() {
-      return onOkFunc()
+      return onOkFunc();
     },
-    onCancel() {},
+    onCancel() {}
   });
 }
 
-const successMSG = (msg) => {
+const successMSG = msg => {
   message.success(msg);
 };
 
@@ -52,8 +57,6 @@ const openNotification = () => {
     icon: <Icon type="success" style={{ color: "#108ee9" }} />
   });
 };
-
-
 
 export default class MainView extends React.Component {
   constructor(props) {
@@ -72,33 +75,36 @@ export default class MainView extends React.Component {
   }
 
   async onDeploy() {
-    
     const accounts = await web3.eth.getAccounts();
-    await taskCreator.methods.createTask(
+    await taskCreator.methods
+      .createTask(
         this.state.description,
         this.state.selectedTasks,
         this.state.selectedCheckers
-      ).send({
-      from: accounts[0]
-    });
-    successMSG("Smart contract was succesfully created. Please, donate some CALC to perform calculations.");
+      )
+      .send({
+        from: accounts[0]
+      });
+    successMSG(
+      "Smart contract was succesfully created. Please, donate some CALC to perform calculations."
+    );
     let taskAddress = await taskCreator.methods.lastCreatedTask().call({
       from: accounts[0]
     });
     showConfirm(async () => {
-      
       await CALC.methods.approve(taskAddress, ValueToDonate).send({
         from: accounts[0]
       });
-      
+
       let taskContract = await getTask(taskAddress);
       // debugger
       await taskContract.methods.putMoney(ValueToDonate).send({
         from: accounts[0]
-      })
-      successMSG("You have successfully donated your CALC. Let's calculate it!")
+      });
+      successMSG(
+        "You have successfully donated your CALC. Let's calculate it!"
+      );
     });
-    
   }
 
   runScript() {
@@ -134,7 +140,7 @@ export default class MainView extends React.Component {
       description: event.target.value
     });
   }
-  
+
   render() {
     let loading = this.state.runningScript;
     let { hashes, checkersHashes, encFiles, decFiles } = this.state;
@@ -143,7 +149,9 @@ export default class MainView extends React.Component {
       {
         title: "Name",
         dataIndex: "fileName",
-        render: (text, row) => <a href={`http://127.0.0.1:8080/ipfs/${row.hash}`}>{text}</a>
+        render: (text, row) => (
+          <a href={`http://127.0.0.1:8080/ipfs/${row.hash}`}>{text}</a>
+        )
       },
       {
         title: "IPFS Hash",
@@ -200,23 +208,17 @@ export default class MainView extends React.Component {
 
     return (
       <div className="main-div">
-        <Controll
-          onRunScriptClick={this.runScript}
-          ariaVisible={this.state.selectedTasks.length > 0}
-          onDescriptionChange={this.onDescriptionChange}
-          deployHashes={
-            this.state.selectedTasks &&
-            this.state.selectedTasks.length > 0 &&
-            this.state.description.length > 0
-          }
-          onDeploy={this.onDeploy}
-        />
         <Divider className="no-margin" />
         <Row className="window">
           <Col span={6} className="side-menu">
             <Files className="right-border" />
           </Col>
-          <Col span={18} className="actions">
+          <Col span={18} className={!loading &&
+          !hashes ? 'run-window': "actions"}>
+            {!loading &&
+              !hashes && (
+              <Button type="primary" shape="circle" icon="play-circle" size='large' onClick={this.runScript}/>
+              )}
             {loading && <ActionWindow />}
             {hashes && (
               <div className="was-deployed">
@@ -255,6 +257,16 @@ export default class MainView extends React.Component {
                     autosize={{ minRows: 2, maxRows: 6 }}
                     onChange={this.onDescriptionChange}
                   />
+                )}
+                {this.state.description.length > 0 && (
+                  <Button
+                    className="create"
+                    type="primary"
+                    // disabled={this.state.description.length > 0}
+                    onClick={this.onDeploy}
+                  >
+                    Create smart contract
+                  </Button>
                 )}
               </div>
             )}

@@ -28,7 +28,7 @@ class ActionWindow extends React.Component {
             <HashLoader
               className={override}
               sizeUnit={"px"}
-              size={250}
+              size={200}
               color={"60ABFF"}
               loading={this.state.loading}
             />

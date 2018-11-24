@@ -14,7 +14,7 @@
 }
 
 .window {
-    height: 700px;
+    height: 730px;
 
 }
 .actions {
@@ -32,4 +32,12 @@
 
 .binaries {
     margin-bottom: 40px;
+}
+
+.create {
+    margin-top: 40px;
+}
+.run-window{
+    text-align: center;
+    padding-top: 300px;
 }
